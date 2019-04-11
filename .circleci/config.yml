@@ -4,7 +4,7 @@ jobs:
   build:
     environment:
       PATH: "${PATH}:${HOME}/${CIRCLE_PROJECT_REPONAME}/node_modules/.bin"
-    docker: # run the steps with Docker
+    docker:
       - image: circleci/node:8.8.1 
     steps:
       - checkout
@@ -21,11 +21,15 @@ jobs:
           paths:
             - ~/.cache/yarn      
   test:
+    docker:
+      - image: circleci/node:8.8.1 
     steps:
       - checkout
       - run: yarn test
       
   deployment:
+    docker:
+      - image: circleci/node:8.8.1 
     steps:
       - checkout
       - run:

@@ -3,6 +3,19 @@ defaults: &defaults
   docker:
     - image: circleci/node:8.8.1 
 
+yarn: &yarn
+  - restore_cache:
+      name: Restore Yarn Package Cache
+      keys:
+        - yarn-packages-{{ checksum "yarn.lock" }}
+  - run:
+      name: Install Dependencies
+      command: yarn install --pure-lockfile
+  - save_cache:
+      name: Save Yarn Package Cache
+      key: yarn-packages-{{ checksum "yarn.lock" }}
+      paths:
+        - ~/.cache/yarn  
 
 version: 2
 
@@ -11,43 +24,34 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Yarn Package Cache
-          keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
-      - run:
-          name: Install Dependencies
-          command: yarn install --pure-lockfile
-      - save_cache:
-          name: Save Yarn Package Cache
-          key: yarn-packages-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn      
+      - *yarn
+    
   test:
     <<: *defaults
     steps:
       - checkout
+      - *yarn
       - run: yarn test
-  deploy:
-    <<: *defaults
-    steps:
-      - checkout
-      - run:
-        name: preview
-        branch:
-          only: master
-        command: |-
-          npm run preview
-          ./preview/demo.js
-      - run:
-        name: npm
-        owner: palantir
-        command: |-
-          npm run build
-          git diff HEAD..origin/master --quiet || (echo "dist not built"; exit 1)
-          npm run -s check_version || (echo "package.json version not updated"; exit 1)
-          echo -e "$NPM_USER\n$NPM_PASS\n$NPM_EMAIL" | npm login
-          npm publish
+  # deploy:
+  #   <<: *defaults
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: preview
+  #         branch:
+  #           only: master
+  #         command: |-
+  #           npm run preview
+  #           ./preview/demo.js
+  #     - run:
+  #         name: npm
+  #         owner: palantir
+  #         command: |-
+  #           npm run build
+  #           git diff HEAD..origin/master --quiet || (echo "dist not built"; exit 1)
+  #           npm run -s check_version || (echo "package.json version not updated"; exit 1)
+  #           echo -e "$NPM_USER\n$NPM_PASS\n$NPM_EMAIL" | npm login
+  #           npm publish
 
 workflows:
   version: 2
@@ -55,4 +59,4 @@ workflows:
     jobs:
       - build
       - test
-      - deploy
+      # - deploy

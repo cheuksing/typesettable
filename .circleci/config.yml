@@ -24,13 +24,13 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - <<: *yarn
+      <<: *yarn
     
   test:
     <<: *defaults
     steps:
       - checkout
-      - <<: *yarn
+      <<: *yarn
       - run: yarn test
   # deploy:
   #   <<: *defaults

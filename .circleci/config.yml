@@ -22,15 +22,7 @@ jobs:
           name: Save Yarn Package Cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
-            - ~/.cache/yarn      
-  test:
-    <<: *defaults
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore Yarn Package Cache
-          keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
+            - ~/.cache/yarn
       - run: yarn test
   # deploy:
   #   <<: *defaults
@@ -58,5 +50,4 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - test
       # - deploy

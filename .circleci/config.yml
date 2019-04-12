@@ -1,11 +1,14 @@
+defaults: &defaults
+  working_directory: ~/typesettable
+  docker:
+    - image: circleci/node:8.8.1 
+
+
 version: 2
 
 jobs:
   build:
-    environment:
-      PATH: "${PATH}:${HOME}/${CIRCLE_PROJECT_REPONAME}/node_modules/.bin"
-    docker:
-      - image: circleci/node:8.8.1 
+    <<: *defaults
     steps:
       - checkout
       - restore_cache:
@@ -21,29 +24,35 @@ jobs:
           paths:
             - ~/.cache/yarn      
   test:
-    docker:
-      - image: circleci/node:8.8.1 
+    <<: *defaults
     steps:
       - checkout
       - run: yarn test
-      
-  deployment:
-    docker:
-      - image: circleci/node:8.8.1 
-    steps:
-      - checkout
-      - run:
-        name: preview
-        branch: /.*/
-        command: |-
-          npm run preview
-          ./preview/demo.js
-      - run:
-        name: npm
-        owner: palantir
-        command: |-
-          npm run build
-          git diff HEAD..origin/master --quiet || (echo "dist not built"; exit 1)
-          npm run -s check_version || (echo "package.json version not updated"; exit 1)
-          echo -e "$NPM_USER\n$NPM_PASS\n$NPM_EMAIL" | npm login
-          npm publish
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test      
+
+  # deploy:
+  #   <<: *defaults
+  #   steps:
+  #     - checkout
+  #     - run:
+  #       name: preview
+  #       branch:
+  #         only: master
+  #       command: |-
+  #         npm run preview
+  #         ./preview/demo.js
+  #     - run:
+  #       name: npm
+  #       owner: palantir
+  #       command: |-
+  #         npm run build
+  #         git diff HEAD..origin/master --quiet || (echo "dist not built"; exit 1)
+  #         npm run -s check_version || (echo "package.json version not updated"; exit 1)
+  #         echo -e "$NPM_USER\n$NPM_PASS\n$NPM_EMAIL" | npm login
+  #         npm publish

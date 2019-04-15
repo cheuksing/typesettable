@@ -1,7 +1,25 @@
 defaults: &defaults
   working_directory: ~/typesettable
   docker:
-    - image: circleci/node:8.8.1 
+    - image: circleci/node:8.8.1-browsers-legacy
+
+restore_yarn_cache: &restore_yarn_cache
+  restore_cache:
+    name: Restore Yarn Package Cache
+    keys:
+      - yarn-packages-{{ checksum "yarn.lock" }}
+
+yarn_install: &yarn_install
+  run:
+    name: Install Dependencies
+    command: yarn install --pure-lockfile
+
+save_yarn_cache: &save_yarn_cache
+  save_cache:
+    name: Save Yarn Package Cache
+    key: yarn-packages-{{ checksum "yarn.lock" }}
+    paths:
+      - ~/.cache/yarn
 
 
 version: 2
@@ -11,18 +29,9 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - restore_cache:
-          name: Restore Yarn Package Cache
-          keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
-      - run:
-          name: Install Dependencies
-          command: yarn install --pure-lockfile
-      - save_cache:
-          name: Save Yarn Package Cache
-          key: yarn-packages-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
+      - *restore_yarn_cache
+      - *yarn_install
+      - *save_yarn_cache
       - run: yarn test
   # deploy:
   #   <<: *defaults
